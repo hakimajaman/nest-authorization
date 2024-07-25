@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  // relations:
+  // one to many
+  authLog   AuthLog[]
+
+  // many to many
+  browsers  UserOnBrowsers[]
+}
+
+model AuthLog {
+  id        Int      @id @default(autoincrement())
+  token     String
+  isExpired Boolean  @default(false)
+  expiredAt DateTime?
+  createdAt DateTime @default(now())
+
+  // relations:
+  // many to one
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  browser   Browser  @relation(fields: [browserId], references: [id])
+  browserId Int
+}
+
+model Browser {
+  id        Int      @id @default(autoincrement())
+  name      String
+  os        String
+  createdAt DateTime @default(now())
+
+  // relations:
+  // many to many
+  users     UserOnBrowsers[]
+
+  // one to many
+  authLog   AuthLog[]
+}
+
+model UserOnBrowsers {
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  browser   Browser   @relation(fields: [browserId], references: [id])
+  browserId Int
+  @@id([userId, browserId])
+}
